@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, Mail, MapPin, MessageCircle, ShieldCheck } from 'lucide-react';
@@ -10,6 +10,33 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function Footer() {
   const pathname = usePathname();
   const { t, language } = useLanguage();
+
+  const [siteSettings, setSiteSettings] = useState<{
+    contactNumbers: Array<{ id: string; phone: string; label: string; isPrimary: boolean; isWhatsApp: boolean }>;
+    contactEmails: Array<{ id: string; email: string; label: string; isPrimary: boolean }>;
+    address: string;
+    mapsUrl: string;
+  }>({
+    contactNumbers: [
+      { id: 'default', phone: '+91 98873 90222', label: 'Rahul Borana', isPrimary: true, isWhatsApp: true },
+    ],
+    contactEmails: [
+      { id: 'default', email: 'rahulborana1306@gmail.com', label: 'Official Enquiries', isPrimary: true },
+    ],
+    address: 'Mahadev Marble and Granite, Raghunathpura, Kelwa',
+    mapsUrl: 'https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA',
+  });
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.settings) {
+          setSiteSettings(data.settings);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (pathname?.startsWith('/admin')) {
     return null;
@@ -130,40 +157,52 @@ export default function Footer() {
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-bronze-400 shrink-0 mt-0.5" />
                 <a
-                  href="https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA"
+                  href={siteSettings.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors leading-snug"
                 >
-                  {t('showroomAddress')}
+                  {siteSettings.address}
                 </a>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-bronze-400 shrink-0" />
-                <a href="tel:+919829012345" className="hover:text-white transition-colors">
-                  +91 98290 12345
-                </a>
-              </div>
+              {/* Dynamic Phone Numbers */}
+              {siteSettings.contactNumbers.map((c) => (
+                <div key={c.id} className="flex items-center gap-2.5">
+                  <Phone className="w-4 h-4 text-bronze-400 shrink-0" />
+                  <a href={`tel:${c.phone.replace(/[^0-9+]/g, '')}`} className="hover:text-white transition-colors font-mono text-xs">
+                    {c.phone} <span className="text-[11px] text-stone-500 font-sans">({c.label})</span>
+                  </a>
+                </div>
+              ))}
 
-              <div className="flex items-center gap-2.5">
-                <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                <a
-                  href={getWhatsAppEnquiryUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-emerald-400 transition-colors"
-                >
-                  WhatsApp: +91 98290 12345
-                </a>
-              </div>
+              {/* WhatsApp Link */}
+              {(() => {
+                const whatsAppNumber = siteSettings.contactNumbers.find((n) => n.isWhatsApp) || siteSettings.contactNumbers[0];
+                return (
+                  <div className="flex items-center gap-2.5">
+                    <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <a
+                      href={getWhatsAppEnquiryUrl(undefined, undefined, undefined, whatsAppNumber?.phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-emerald-400 transition-colors text-xs"
+                    >
+                      WhatsApp: {whatsAppNumber?.phone}
+                    </a>
+                  </div>
+                );
+              })()}
 
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-bronze-400 shrink-0" />
-                <a href="mailto:sales@mahadevmarble.com" className="hover:text-white transition-colors">
-                  sales@mahadevmarble.com
-                </a>
-              </div>
+              {/* Dynamic Emails */}
+              {siteSettings.contactEmails.map((e) => (
+                <div key={e.id} className="flex items-center gap-2.5">
+                  <Mail className="w-4 h-4 text-bronze-400 shrink-0" />
+                  <a href={`mailto:${e.email}`} className="hover:text-white transition-colors text-xs">
+                    {e.email}
+                  </a>
+                </div>
+              ))}
 
               <div className="pt-2 text-xs text-stone-500">
                 {t('hoursDetail')}<br />

@@ -187,7 +187,7 @@ export default function SendRequirementPage() {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="e.g. +91 98290 12345"
+                    placeholder="e.g. +91 98873 90222"
                     className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-300 rounded text-xs text-charcoal-900 focus:outline-none focus:ring-1 focus:ring-bronze-500 focus:bg-white"
                   />
                 </div>

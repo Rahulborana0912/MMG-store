@@ -5,6 +5,7 @@ import { getCurrentUser } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { formatINR, formatIndianDate } from '@/lib/utils';
 import { Printer, ArrowLeft } from 'lucide-react';
+import { getSiteSettings } from '@/lib/site-settings';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,10 @@ export default async function QuotationPrintPage({ params }: PrintPageProps) {
   if (!quote) {
     notFound();
   }
+
+  const settings = await getSiteSettings();
+  const primaryPhone = settings.contactNumbers.find((n) => n.isPrimary) || settings.contactNumbers[0];
+  const primaryEmail = settings.contactEmails.find((e) => e.isPrimary) || settings.contactEmails[0];
 
   return (
     <div className="min-h-screen bg-stone-100 p-4 sm:p-8 print:p-0 print:bg-white flex flex-col items-center">
@@ -73,7 +78,7 @@ export default async function QuotationPrintPage({ params }: PrintPageProps) {
               </div>
               <div>
                 <h1 className="font-serif text-2xl font-bold text-charcoal-950">
-                  Mahadev Marble and Granite Pvt. Ltd.
+                  {settings.companyName}
                 </h1>
                 <span className="text-xs uppercase tracking-widest text-stone-500 font-semibold block">
                   Raghunathpura Yard • Kelwa, Rajasthan
@@ -82,8 +87,8 @@ export default async function QuotationPrintPage({ params }: PrintPageProps) {
             </div>
 
             <div className="text-xs text-stone-600 leading-relaxed max-w-md">
-              Mahadev Marble and Granite, Raghunathpura, Kelwa, Rajasthan, India<br />
-              <strong>Phone:</strong> +91 98290 12345 • <strong>Email:</strong> sales@mahadevmarble.com
+              {settings.address}, Rajasthan, India<br />
+              <strong>Phone:</strong> {primaryPhone?.phone} • <strong>Email:</strong> {primaryEmail?.email}
             </div>
           </div>
 

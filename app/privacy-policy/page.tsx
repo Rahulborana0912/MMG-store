@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
         </p>
         <h2 className="font-serif text-base font-bold text-charcoal-900 pt-2">3. Contact Us</h2>
         <p>
-          For questions regarding this policy, contact our Raghunathpura, Kelwa office at sales@mahadevmarble.com or +91 98290 12345.
+          For questions regarding this policy, contact our Raghunathpura, Kelwa office at rahulborana1306@gmail.com or +91 98873 90222.
         </p>
       </div>
     </div>

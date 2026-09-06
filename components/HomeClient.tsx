@@ -624,7 +624,7 @@ export default function HomeClient({
                   <Phone className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                   <div>
                     <strong className="text-white block font-semibold">Direct Yard Contact:</strong>
-                    <span>+91 98290 12345 / +91 94141 56789</span>
+                    <span>+91 98873 90222 (Rahul Borana)</span>
                   </div>
                 </div>
               </div>

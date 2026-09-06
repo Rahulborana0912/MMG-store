@@ -398,7 +398,7 @@ export default function AccountClient({ user, enquiries, quotations }: AccountCl
                         </div>
                         <p className="text-[11px] text-stone-500">
                           Mahadev Marble and Granite, Raghunathpura, Kelwa<br />
-                          Phone: +91 98290 12345 • Email: sales@mahadevmarble.com
+                          Phone: +91 98873 90222 • Email: rahulborana1306@gmail.com
                         </p>
                       </div>
 

@@ -30,7 +30,7 @@ export default function MobileStickyCTA({
     <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-stone-xl px-4 py-2.5 flex items-center justify-between gap-2 safe-area-bottom print:hidden">
       {/* Call Button */}
       <a
-        href="tel:+919829012345"
+        href={`tel:${process.env.NEXT_PUBLIC_PHONE?.replace(/[^0-9+]/g, '') || '+919887390222'}`}
         className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 bg-stone-100 active:bg-stone-200 text-charcoal-900 text-xs font-semibold rounded border border-stone-300"
       >
         <Phone className="w-3.5 h-3.5 text-bronze-600" />

@@ -42,12 +42,45 @@ export default function Navbar() {
 
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const phoneDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  const [siteSettings, setSiteSettings] = useState<{
+    contactNumbers: Array<{ id: string; phone: string; label: string; isPrimary: boolean; isWhatsApp: boolean }>;
+    contactEmails: Array<{ id: string; email: string; label: string; isPrimary: boolean }>;
+    address: string;
+    mapsUrl: string;
+  }>({
+    contactNumbers: [
+      { id: 'default', phone: '+91 98873 90222', label: 'Rahul Borana (Direct / Owner)', isPrimary: true, isWhatsApp: true },
+    ],
+    contactEmails: [
+      { id: 'default', email: 'rahulborana1306@gmail.com', label: 'Official Enquiries', isPrimary: true },
+    ],
+    address: 'Mahadev Marble and Granite, Raghunathpura, Kelwa',
+    mapsUrl: 'https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA',
+  });
+  const [phoneDropdownOpen, setPhoneDropdownOpen] = useState(false);
+
+  // Fetch dynamic site settings from DB
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.settings) {
+          setSiteSettings(data.settings);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setProfileDropdownOpen(false);
+      }
+      if (phoneDropdownRef.current && !phoneDropdownRef.current.contains(event.target as Node)) {
+        setPhoneDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -276,24 +309,75 @@ export default function Navbar() {
               </button>
             </div>
 
-            <a
-              href="tel:+919829012345"
-              className="hidden lg:flex items-center gap-1.5 hover:text-white transition-colors"
-            >
-              <Phone className="w-3.5 h-3.5 text-bronze-400" />
-              <span>+91 98290 12345</span>
-            </a>
+            {/* Dynamic Phone Numbers */}
+            {(() => {
+              const primaryPhone = siteSettings.contactNumbers.find((n) => n.isPrimary) || siteSettings.contactNumbers[0];
+              const whatsAppNumber = siteSettings.contactNumbers.find((n) => n.isWhatsApp) || primaryPhone;
+              const hasMultiple = siteSettings.contactNumbers.length > 1;
 
-            <a
-              href={getWhatsAppEnquiryUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
-            >
-              <MessageCircle className="w-3.5 h-3.5 fill-emerald-400 text-charcoal-950" />
-              <span className="hidden sm:inline">WhatsApp MMG</span>
-              <span className="sm:hidden">WhatsApp</span>
-            </a>
+              return (
+                <>
+                  <div ref={phoneDropdownRef} className="relative hidden lg:block">
+                    {hasMultiple ? (
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => setPhoneDropdownOpen(!phoneDropdownOpen)}
+                          className="flex items-center gap-1.5 hover:text-white transition-colors py-1"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-bronze-400" />
+                          <span>{primaryPhone?.phone}</span>
+                          <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform ${phoneDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {phoneDropdownOpen && (
+                          <div className="absolute top-full right-0 mt-2 w-64 bg-charcoal-900 border border-stone-700 rounded-xl shadow-2xl p-2 z-50 space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-bronze-400 px-2 py-1 block border-b border-stone-800">
+                              Direct Showroom Lines
+                            </span>
+                            {siteSettings.contactNumbers.map((c) => (
+                              <a
+                                key={c.id}
+                                href={`tel:${c.phone.replace(/[^0-9+]/g, '')}`}
+                                onClick={() => setPhoneDropdownOpen(false)}
+                                className="flex flex-col px-2.5 py-1.5 rounded-lg hover:bg-stone-800 text-left transition-colors"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className="font-mono text-xs font-bold text-amber-200">{c.phone}</span>
+                                  {c.isWhatsApp && (
+                                    <span className="text-[9px] font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800 px-1 rounded">WA</span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] text-stone-400">{c.label}</span>
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <a
+                        href={`tel:${primaryPhone?.phone?.replace(/[^0-9+]/g, '')}`}
+                        className="flex items-center gap-1.5 hover:text-white transition-colors"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-bronze-400" />
+                        <span>{primaryPhone?.phone}</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <a
+                    href={getWhatsAppEnquiryUrl(undefined, undefined, undefined, whatsAppNumber?.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 fill-emerald-400 text-charcoal-950" />
+                    <span className="hidden sm:inline">WhatsApp MMG</span>
+                    <span className="sm:hidden">WhatsApp</span>
+                  </a>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -774,22 +858,37 @@ export default function Navbar() {
 
               {/* Quick Contact & WhatsApp in Drawer */}
               <div className="pt-3 border-t border-stone-200 space-y-2">
-                <a
-                  href={getWhatsAppEnquiryUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-2.5 px-4 bg-[#25D366] text-white text-xs font-semibold uppercase tracking-wider rounded flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-4 h-4 fill-white" />
-                  <span>WhatsApp Showroom</span>
-                </a>
-                <a
-                  href="tel:+919829012345"
-                  className="w-full py-2.5 px-4 bg-charcoal-900 text-white text-xs font-semibold uppercase tracking-wider rounded flex items-center justify-center gap-2"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>Call: +91 98290 12345</span>
-                </a>
+                {(() => {
+                  const primaryPhone = siteSettings.contactNumbers.find((n) => n.isPrimary) || siteSettings.contactNumbers[0];
+                  const whatsAppNumber = siteSettings.contactNumbers.find((n) => n.isWhatsApp) || primaryPhone;
+
+                  return (
+                    <>
+                      <a
+                        href={getWhatsAppEnquiryUrl(undefined, undefined, undefined, whatsAppNumber?.phone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 px-4 bg-[#25D366] text-white text-xs font-semibold uppercase tracking-wider rounded flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4 fill-white" />
+                        <span>WhatsApp MMG</span>
+                      </a>
+                      {siteSettings.contactNumbers.map((c) => (
+                        <a
+                          key={c.id}
+                          href={`tel:${c.phone.replace(/[^0-9+]/g, '')}`}
+                          className="w-full py-2 px-3 bg-charcoal-900 text-white rounded flex items-center justify-between transition-colors hover:bg-charcoal-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-bronze-400" />
+                            <span className="font-mono text-xs font-bold">{c.phone}</span>
+                          </div>
+                          <span className="text-[10px] text-stone-400">{c.label}</span>
+                        </a>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             </div>
 

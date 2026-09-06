@@ -1,16 +1,24 @@
 import React from 'react';
 import Link from 'next/link';
-import { MapPin, Phone, MessageCircle, Clock, Navigation, ShieldCheck } from 'lucide-react';
+import { MapPin, Phone, MessageCircle, Clock, Navigation, Mail } from 'lucide-react';
 import ContactForm from '@/components/ContactForm';
 import BackButton from '@/components/BackButton';
 import { getWhatsAppEnquiryUrl } from '@/lib/utils';
+import { getSiteSettings } from '@/lib/site-settings';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata = {
   title: 'Contact MMG | Mahadev Marble and Granite Showroom & Yard',
   description: 'Reach out to Mahadev Marble and Granite. Visit our processing yard and showroom in Raghunathpura, Kelwa, or request a customized quotation.',
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSiteSettings();
+  const primaryPhone = settings.contactNumbers.find((n) => n.isPrimary) || settings.contactNumbers[0];
+  const whatsAppNumber = settings.contactNumbers.find((n) => n.isWhatsApp) || primaryPhone;
+
   return (
     <div className="bg-stone-50 min-h-screen py-8 sm:py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -45,10 +53,10 @@ export default function ContactPage() {
               Showroom & Yard
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed font-medium">
-              Mahadev Marble and Granite, Raghunathpura, Kelwa
+              {settings.address}
             </p>
             <a
-              href="https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA"
+              href={settings.mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-semibold text-bronze-600 hover:text-bronze-700 pt-1"
@@ -58,25 +66,32 @@ export default function ContactPage() {
             </a>
           </div>
 
-          {/* Card 2: Phone */}
+          {/* Card 2: Direct Phone Lines (Multiple numbers support) */}
           <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-stone-sm space-y-3">
             <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-bronze-600">
               <Phone className="w-5 h-5" />
             </div>
             <h3 className="font-serif font-bold text-base text-charcoal-900">
-              Direct Phone Call
+              Direct Phone Lines
             </h3>
-            <p className="text-xs text-stone-600">
-              Speak directly with our yard sales manager for stone inquiries:
+            <p className="text-xs text-stone-500">
+              Speak directly with our team for stone inquiries:
             </p>
-            <div className="pt-1">
-              <a
-                href="tel:+919829012345"
-                className="font-mono text-sm font-bold text-charcoal-900 hover:text-bronze-600 block"
-              >
-                +91 98290 12345
-              </a>
-              <span className="text-[11px] text-stone-400">Direct Showroom Mobile</span>
+            <div className="pt-1 space-y-2">
+              {settings.contactNumbers.map((c) => (
+                <div key={c.id} className="pb-1 border-b border-stone-100 last:border-0 last:pb-0">
+                  <a
+                    href={`tel:${c.phone.replace(/[^0-9+]/g, '')}`}
+                    className="font-mono text-sm font-bold text-charcoal-900 hover:text-bronze-600 block"
+                  >
+                    {c.phone}
+                  </a>
+                  <span className="text-[11px] text-stone-500 flex items-center gap-1">
+                    <span>{c.label}</span>
+                    {c.isPrimary && <span className="text-[9px] font-bold text-bronze-700 uppercase">(Primary)</span>}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -91,30 +106,44 @@ export default function ContactPage() {
             <p className="text-xs text-stone-600">
               Fastest way to receive high-res slab pictures, batch videos, and estimates:
             </p>
-            <a
-              href={getWhatsAppEnquiryUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded text-xs font-semibold"
-            >
-              <span>Chat on WhatsApp</span>
-            </a>
+            <div className="pt-1">
+              <a
+                href={getWhatsAppEnquiryUrl(undefined, undefined, undefined, whatsAppNumber?.phone)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 fill-white" />
+                <span>Chat on WhatsApp ({whatsAppNumber?.phone})</span>
+              </a>
+            </div>
           </div>
 
-          {/* Card 4: Hours & Business */}
+          {/* Card 4: Official Emails & Hours */}
           <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-stone-sm space-y-3">
             <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-bronze-600">
-              <Clock className="w-5 h-5" />
+              <Mail className="w-5 h-5" />
             </div>
             <h3 className="font-serif font-bold text-base text-charcoal-900">
-              Operating Hours
+              Official Email & Hours
             </h3>
-            <div className="text-xs text-stone-600 space-y-1">
-              <p>Mon – Sat: 9:00 AM – 7:30 PM IST</p>
-              <p>Sunday: By Prior Appointment</p>
+            <div className="space-y-1">
+              {settings.contactEmails.map((e) => (
+                <div key={e.id}>
+                  <a
+                    href={`mailto:${e.email}`}
+                    className="text-xs font-semibold text-charcoal-900 hover:text-bronze-600 block truncate"
+                  >
+                    {e.email}
+                  </a>
+                  <span className="text-[10px] text-stone-400">{e.label}</span>
+                </div>
+              ))}
             </div>
-            <div className="pt-1 text-[11px] text-stone-400 border-t border-stone-100">
-              Direct Showroom Yard Sourcing
+            <div className="pt-2 text-[11px] text-stone-600 border-t border-stone-100 space-y-0.5">
+              <p className="font-medium text-stone-800">Yard Hours:</p>
+              <p>Mon – Sat: 9:00 AM – 7:30 PM</p>
+              <p>Sunday: By Appointment</p>
             </div>
           </div>
 
@@ -149,7 +178,7 @@ export default function ContactPage() {
 
               <div className="pt-3">
                 <a
-                  href="https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA"
+                  href={settings.mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white text-charcoal-950 text-xs font-semibold uppercase tracking-widest rounded hover:bg-stone-100 transition-colors"
@@ -160,16 +189,17 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Corporate Transparency Note */}
+            {/* Direct Yard Support Box */}
             <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-stone-sm space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-charcoal-900">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Showroom & Processing Yard</span>
-              </div>
-              <div className="text-xs text-stone-600 space-y-1 leading-relaxed">
-                <p><strong>Entity Name:</strong> Mahadev Marble and Granite Pvt. Ltd.</p>
-                <p><strong>Location:</strong> Mahadev Marble and Granite, Raghunathpura, Kelwa</p>
-                <p><strong>Primary Sourcing:</strong> Makrana, Rajsamand, Kelwa, Chimakurthy, Karimnagar</p>
+              <h4 className="font-serif font-bold text-sm text-charcoal-900">
+                Direct Yard Sourcing & Dispatch
+              </h4>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Visiting our processing yard allows architects and builders to inspect intact gangsaw book-matched blocks in natural daylight before purchase.
+              </p>
+              <div className="pt-2 flex items-center justify-between text-xs text-stone-500 border-t border-stone-100">
+                <span>Direct Owner Support:</span>
+                <span className="font-bold text-charcoal-900 font-mono">{primaryPhone?.phone}</span>
               </div>
             </div>
 

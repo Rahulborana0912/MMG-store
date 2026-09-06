@@ -184,7 +184,7 @@ export default function AdminQuotationsClient({ initialQuotations }: AdminQuotat
 
                 <div className="text-xs text-stone-600 leading-relaxed max-w-sm">
                   Mahadev Marble and Granite, Raghunathpura, Kelwa<br />
-                  <strong>Phone:</strong> +91 98290 12345 • <strong>Email:</strong> sales@mahadevmarble.com
+                  <strong>Phone:</strong> +91 98873 90222 • <strong>Email:</strong> rahulborana1306@gmail.com
                 </div>
               </div>
 

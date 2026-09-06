@@ -82,9 +82,9 @@ DIRECT_URL="postgresql://user:password@host:5432/postgres"
 
 NEXT_PUBLIC_COMPANY_NAME="Mahadev Marble and Granite Pvt. Ltd."
 NEXT_PUBLIC_BRAND_NAME="MMG"
-NEXT_PUBLIC_PHONE="+91 98290 12345"
-NEXT_PUBLIC_WHATSAPP="+919829012345"
-NEXT_PUBLIC_EMAIL="sales@mahadevmarble.com"
+NEXT_PUBLIC_PHONE="+91 98873 90222"
+NEXT_PUBLIC_WHATSAPP="+919887390222"
+NEXT_PUBLIC_EMAIL="rahulborana1306@gmail.com"
 NEXT_PUBLIC_ADDRESS="Mahadev Marble and Granite, Raghunathpura, Kelwa"
 NEXT_PUBLIC_MAPS_URL="https://maps.app.goo.gl/Z4vojjCLAfeXNVvTA"
 

@@ -22,8 +22,8 @@ export function formatINR(amount: number, options?: { showUnit?: boolean; unit?:
 /**
  * Build pre-filled WhatsApp link with professional Indian stone enquiry message
  */
-export function getWhatsAppEnquiryUrl(productName?: string, productCode?: string, customMessage?: string) {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP || '919829012345';
+export function getWhatsAppEnquiryUrl(productName?: string, productCode?: string, customMessage?: string, overridePhone?: string) {
+  const phone = overridePhone || process.env.NEXT_PUBLIC_WHATSAPP || '919887390222';
   
   if (customMessage) {
     return `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(customMessage)}`;
