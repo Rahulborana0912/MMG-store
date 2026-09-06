@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FAF9F5;
+    --foreground: #1B1A19;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Luxury stone subtle texture background */
+.stone-texture-overlay {
+  background-image: radial-gradient(rgba(38, 32, 26, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Subtle gold/bronze metallic shimmer highlight */
+.bronze-gradient {
+  background: linear-gradient(135deg, #A6865B 0%, #8C6E45 100%);
+}
+
+.charcoal-gradient {
+  background: linear-gradient(180deg, #2A2825 0%, #171615 100%);
+}
+
+/* Print styles for Formal Quotation PDF generation */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .quotation-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}

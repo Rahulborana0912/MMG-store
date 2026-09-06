@@ -1,0 +1,401 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+enum ProductFormat {
+  SLAB
+  TILE
+}
+
+enum ProductAvailability {
+  AVAILABLE
+  LOW_STOCK
+  SOLD_OUT
+  ON_REQUEST
+}
+
+enum SlabStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  HOLD
+  HIDDEN
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  QUOTED
+  FOLLOW_UP
+  COMPLETED
+  CLOSED
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum RequirementStatus {
+  DRAFT
+  SUBMITTED
+  QUOTED
+  CLOSED
+}
+
+model User {
+  id              String           @id @default(cuid())
+  supabaseAuthId  String?          @unique
+  name            String
+  phone           String
+  email           String           @unique
+  password        String?
+  role            Role             @default(CUSTOMER)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  staffProfile    StaffProfile?
+  customerProfile CustomerProfile?
+  enquiries       Enquiry[]
+  quotations      Quotation[]
+  requirements    Requirement[]
+  favourites      Favourite[]
+  comparisons     Comparison[]
+  auditLogs       AuditLog[]
+}
+
+model CustomerProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city              String?
+  address           String?
+  preferredMaterial String?  // Marble, Granite, Natural Stone
+  projectType       String?  // Villa, Apartment, Commercial, Temple, Hospitality
+  approxBudget      Float?
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model StaffProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role     @default(STAFF)
+  department  String?  @default("Sales")
+  permissions String?  @default("all")
+  createdAt   DateTime @default(now())
+}
+
+model Category {
+  id             String    @id @default(cuid())
+  name           String
+  slug           String    @unique
+  description    String?
+  parentCategory String?
+  products       Product[]
+  createdAt      DateTime  @default(now())
+}
+
+model Product {
+  id                      String              @id @default(cuid())
+  productCode             String              @unique
+  name                    String
+  slug                    String              @unique
+  material                String              // Marble, Granite, Natural Stone
+  categoryId              String
+  category                Category            @relation(fields: [categoryId], references: [id])
+  format                  ProductFormat       @default(SLAB)
+  colour                  String              // White, Black, Grey, Beige, Brown, Green, Red, Other
+  pattern                 String              // Natural Veins, Speckled, Cloudy, Linear, Plain, Exotic
+  finish                  String              // Polished, Honed, Leathered, Flamed, Antique
+  description             String
+  shortDescription        String?
+  pricePerSqft            Float
+  indicativePrice         Float?
+  pricePerPiece           Float?
+  slabPrice               Float?
+  thicknessMm             Float               // 16, 18, 20, 30 mm
+  lengthInches            Float
+  widthInches             Float
+  areaSqft                Float
+  quantity                Int                 @default(1)
+  availability            ProductAvailability @default(AVAILABLE)
+  featured                Boolean             @default(false)
+  isNewArrival            Boolean             @default(false)
+  arrivalDate             DateTime?
+  published               Boolean             @default(true)
+  recommendedApplications String?             // e.g. "Flooring, Wall Cladding, Countertops, Staircases"
+  origin                  String?             // e.g. "Rajasthan, India", "Makrana, India", "Italy"
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  slabs                   SlabInventory[]
+  images                  ProductImage[]
+  enquiries               Enquiry[]
+  quotationItems          QuotationItem[]
+  requirementItems        RequirementItem[]
+  favourites              Favourite[]
+  comparisonItems         ComparisonItem[]
+}
+
+model SlabInventory {
+  id                   String     @id @default(cuid())
+  slabCode             String     @unique // e.g. MMG-SLAB-ST-001
+  productId            String
+  product              Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batchId              String?    // Quarry Lot / Batch ID e.g. BATCH-2026-03
+  material             String?
+  colour               String?
+  finish               String?
+  lengthInches         Float
+  widthInches          Float
+  thicknessMm          Float
+  areaSqft             Float
+  pricePerSqft         Float?
+  slabPrice            Float?
+  location             String?    // e.g. "Yard Bay 4, Sukher"
+  status               SlabStatus @default(AVAILABLE)
+  isSample             Boolean    @default(false)
+  notes                String?
+  arrivalDate          DateTime?
+  reservedAt           DateTime?
+  reservedBy           String?    // Customer ID, Staff ID, or Name
+  reservationNotes     String?
+  reservationExpiresAt DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  images               ProductImage[]
+  quotationItems       QuotationItem[]
+  requirementItems     RequirementItem[]
+}
+
+model ProductImage {
+  id         String         @id @default(cuid())
+  productId  String
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  slabId     String?
+  slab       SlabInventory? @relation(fields: [slabId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  imageType  String         @default("MAIN") // MAIN, SLAB, CLOSEUP, VEIN, TEXTURE, APPLICATION
+  imageOrder Int            @default(0)
+  isMain     Boolean        @default(false)
+  altText    String?
+  createdAt  DateTime       @default(now())
+}
+
+model Requirement {
+  id             String            @id @default(cuid())
+  customerId     String
+  customer       User              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  projectName    String            // e.g. "Villa Flooring", "Master Kitchen Countertop"
+  application    String?           // Flooring, Kitchen, Wall Cladding, Staircase, Bathroom
+  approxAreaSqft Float?
+  budget         Float?
+  material       String?
+  colour         String?
+  message        String?
+  status         RequirementStatus @default(DRAFT)
+  items          RequirementItem[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model RequirementItem {
+  id            String         @id @default(cuid())
+  requirementId String
+  requirement   Requirement    @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  slabId        String?
+  slab          SlabInventory? @relation(fields: [slabId], references: [id], onDelete: SetNull)
+  quantitySqft  Float?
+  notes         String?
+  createdAt     DateTime       @default(now())
+}
+
+model Enquiry {
+  id              String            @id @default(cuid())
+  enquiryNumber   String            @unique
+  customerId      String?
+  customer        User?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  productId       String?
+  product         Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name            String
+  phone           String
+  whatsapp        String?
+  email           String?
+  city            String?
+  application     String?           // Flooring, Kitchen, Staircase, etc.
+  preferredColour String?
+  quantity        String?
+  approxAreaSqft  Float?
+  budget          Float?
+  message         String
+  source          String?           @default("WEBSITE") // WEBSITE, WHATSAPP, CALL, PRODUCT_PAGE, HELP_ME_CHOOSE, SEND_REQUIREMENT, NEW_ARRIVALS, REFERRAL
+  status          EnquiryStatus     @default(NEW)
+  assignedStaff   String?
+  staffNotes      String?
+  quotations      Quotation[]
+  activities      EnquiryActivity[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model EnquiryActivity {
+  id        String   @id @default(cuid())
+  enquiryId String
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  staffId   String?
+  staffName String?
+  action    String   // STATUS_CHANGE, NOTE_ADDED, QUOTATION_CREATED, CALL_ATTEMPTED, WHATSAPP_SENT
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Quotation {
+  id                 String          @id @default(cuid())
+  quotationNumber    String          @unique
+  enquiryId          String?
+  enquiry            Enquiry?        @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
+  customerId         String?
+  customer           User?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName       String
+  customerPhone      String
+  customerEmail      String?
+  customerAddress    String?
+  subtotal           Float
+  discount           Float           @default(0)
+  additionalCharges  Float           @default(0)
+  taxLabel           String          @default("GST") // Configurable tax label
+  gstRate            Float           @default(18.0)  // Configurable tax rate
+  gstAmount          Float           @default(0)
+  total              Float
+  status             QuotationStatus @default(DRAFT)
+  validUntil         DateTime?
+  notes              String?
+  termsAndConditions String?
+  items              QuotationItem[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+}
+
+model QuotationItem {
+  id           String         @id @default(cuid())
+  quotationId  String
+  quotation    Quotation      @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  slabId       String?
+  slab         SlabInventory? @relation(fields: [slabId], references: [id], onDelete: SetNull)
+  description  String
+  format       ProductFormat  @default(SLAB)
+  quantitySqft Float
+  ratePerSqft  Float
+  amount       Float
+}
+
+model Favourite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Comparison {
+  id        String           @id @default(cuid())
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?
+  items     ComparisonItem[]
+  createdAt DateTime         @default(now())
+}
+
+model ComparisonItem {
+  id           String     @id @default(cuid())
+  comparisonId String
+  comparison   Comparison @relation(fields: [comparisonId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userRole   String?
+  action     String   // INVENTORY_UPDATE, SLAB_STATUS_CHANGE, QUOTATION_ISSUED, ENQUIRY_STATUS_CHANGE
+  entityType String   // PRODUCT, SLAB, QUOTATION, ENQUIRY, USER
+  entityId   String?
+  details    String?  // JSON formatted details of the change
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  eventType  String   // PAGE_VIEW, PRODUCT_VIEW, WHATSAPP_CLICK, CALL_CLICK, SEARCH, FINDER_COMPLETE, ENQUIRY_SUBMIT, QUOTE_REQUEST
+  entityId   String?  // Product ID or Slug
+  source     String?  // Source: google, instagram, direct, whatsapp, referral
+  path       String?
+  metadata   String?  // JSON string
+  createdAt  DateTime @default(now())
+}
+
+model InventoryBatch {
+  id             String   @id @default(cuid())
+  batchNumber    String   @unique
+  quarryOrigin   String?  // e.g. "Makrana, Rajasthan", "Khammam, Telangana"
+  material       String   // Marble, Granite, Natural Stone
+  blocksReceived Int      @default(1)
+  arrivalDate    DateTime @default(now())
+  notes          String?
+  createdAt      DateTime @default(now())
+}
+
+model Collection {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  heroImage   String?
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Application {
+  id                String   @id @default(cuid())
+  name              String   // Kitchen Countertop, Flooring, Staircase, Wall Cladding, etc.
+  slug              String   @unique
+  description       String?
+  suitableMaterials String?  // Marble, Granite, Quartzite
+  featuredImage     String?
+  createdAt         DateTime @default(now())
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g. SHOWROOM_PHONE, WHATSAPP_NUMBER, SHOWROOM_ADDRESS, DEFAULT_GST_RATE
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
