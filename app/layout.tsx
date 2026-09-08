@@ -31,6 +31,9 @@ export const metadata: Metadata = {
     "Udaipur Marble Supplier",
     "Granite Slabs Udaipur",
   ],
+  verification: {
+    google: "h7_HCqIizqlqxXdJwK6DUDgiC262J_z9WygDTmho5do",
+  },
 };
 
 export default function RootLayout({
